@@ -335,6 +335,10 @@
 
 // export default Stocks;
 
+
+
+
+
 import React, { useState, useEffect } from "react";
 import {
   Container,
@@ -371,14 +375,13 @@ const DEFAULT_STOCKS = [
 const conversionRates = { USD: 1, INR: 82, EUR: 0.93 };
 const currencySymbols = { USD: "$", INR: "₹", EUR: "€" };
 
-// Generate 30‑point mock series around a base price
 const generateMockData = (basePrice) => {
   const now = Math.floor(Date.now() / 1000);
   const t = Array.from({ length: 30 }, (_, i) => now - (30 - i) * 86400);
   const c = t.map((_, i) =>
     basePrice +
-      Math.sin(i / 5) * (basePrice * 0.05) +
-      (Math.random() - 0.5) * (basePrice * 0.02)
+    Math.sin(i / 5) * (basePrice * 0.05) +
+    (Math.random() - 0.5) * (basePrice * 0.02)
   );
   return { s: "ok", t, c };
 };
@@ -414,13 +417,11 @@ const Stocks = () => {
     ).then(setDefaultStocksData);
   }, []);
 
-  // Fetch profile, current quote and time series (real or mock)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Fetch profile, quote & series (real or mock)
   useEffect(() => {
     if (!selectedStock) return;
     setLoading(true);
 
-    // load profile & quote
     fetchCompanyProfile(selectedStock).then(setProfile).catch(() => {});
     fetchQuote(selectedStock)
       .then(setQuote)
@@ -438,13 +439,11 @@ const Stocks = () => {
             series = await fetchDailyHistoricalData(selectedStock);
           }
         } catch {
-          // ignore errors
+          // ignore
         }
         const latest = quote?.c || 100;
         if (!series) {
-          setChartData(
-            generateMockData(latest * conversionRates[currency])
-          );
+          setChartData(generateMockData(latest * conversionRates[currency]));
         } else {
           const entries = Object.entries(series).sort(
             (a, b) => new Date(a[0]) - new Date(b[0])
@@ -455,29 +454,24 @@ const Stocks = () => {
             "6m": 182 * 86400000,
             "1y": 365 * 86400000,
           }[timeline];
-          const t = [];
-          const c = [];
+          const t = [], c = [];
           for (const [dt, v] of entries) {
             const ts = new Date(dt).getTime();
             if (ts >= cutoff) {
               t.push(Math.floor(ts / 1000));
-              c.push(
-                parseFloat(v["4. close"]) * conversionRates[currency]
-              );
+              c.push(parseFloat(v["4. close"]) * conversionRates[currency]);
             }
           }
           setChartData({ s: "ok", t, c });
         }
         setLoading(false);
       });
-  }, [selectedStock, timeline, currency]);
+  }, [selectedStock, timeline, currency, quote?.c]);
 
   return (
     <Container maxW="container.xl" py="8">
       <VStack spacing="6">
-        <Text fontSize="3xl" fontWeight="bold">
-          Stocks Dashboard
-        </Text>
+        <Text fontSize="3xl" fontWeight="bold">Stocks Dashboard</Text>
 
         <HStack w="100%">
           <Input
@@ -490,6 +484,7 @@ const Stocks = () => {
         </HStack>
 
         <HStack spacing="4">
+          <Text>Currency:</Text>
           {["USD", "INR", "EUR"].map((c) => (
             <Button
               key={c}
@@ -502,14 +497,7 @@ const Stocks = () => {
         </HStack>
 
         {searchResults.length > 0 && (
-          <Box
-            w="100%"
-            bg="gray.50"
-            p="4"
-            borderRadius="md"
-            maxH="200px"
-            overflowY="auto"
-          >
+          <Box w="100%" bg="gray.50" p="4" borderRadius="md" maxH="200px" overflowY="auto">
             {searchResults.map((item) => (
               <Button
                 key={item.symbol}
@@ -531,7 +519,7 @@ const Stocks = () => {
         {!query && !selectedStock && (
           <VStack w="100%" spacing="4">
             <Text>Popular Stocks</Text>
-            <SimpleGrid columns={[2, 3, 4]} spacing="6" w="100%">
+            <SimpleGrid columns={[2,3,4]} spacing="6" w="100%">
               {defaultStocksData.map((stk) => (
                 <Box
                   key={stk.symbol}
@@ -542,22 +530,12 @@ const Stocks = () => {
                   cursor="pointer"
                   onClick={() => setSelectedStock(stk.symbol)}
                 >
-                  {stk.logo && (
-                    <Image
-                      src={stk.logo}
-                      boxSize="50px"
-                      mx="auto"
-                    />
-                  )}
+                  {stk.logo && <Image src={stk.logo} boxSize="50px" mx="auto" />}
                   <Text fontWeight="bold">{stk.symbol}</Text>
                   <Text>{stk.name}</Text>
                   <Text>
                     {stk.currentPrice != null
-                      ? currencySymbols[currency] +
-                        (
-                          stk.currentPrice *
-                          conversionRates[currency]
-                        ).toFixed(2)
+                      ? currencySymbols[currency] + (stk.currentPrice * conversionRates[currency]).toFixed(2)
                       : "N/A"}
                   </Text>
                 </Box>
@@ -569,7 +547,7 @@ const Stocks = () => {
 
       {loading && (
         <VStack py="8">
-          <Spinner size="xl" />
+          <Spinner size="xl"/>
           <Text>Loading…</Text>
         </VStack>
       )}
@@ -577,9 +555,7 @@ const Stocks = () => {
       {selectedStock && profile && quote && chartData && (
         <VStack mt="8" spacing="6" align="stretch">
           <HStack bg="gray.100" p="6" borderRadius="md">
-            {profile.logo && (
-              <Image src={profile.logo} boxSize="60px" />
-            )}
+            {profile.logo && <Image src={profile.logo} boxSize="60px"/>}
             <VStack align="flex-start">
               <Text fontSize="2xl" fontWeight="bold">
                 {profile.name} ({selectedStock})
@@ -587,36 +563,25 @@ const Stocks = () => {
               <Text>Exchange: {profile.exchange}</Text>
               <Text>
                 Current: {currencySymbols[currency]}
-                {(quote.c * conversionRates[currency]).toFixed(
-                  2
-                )}
+                {(quote.c * conversionRates[currency]).toFixed(2)}
               </Text>
             </VStack>
           </HStack>
 
           <HStack spacing="4" justify="center">
-            {["7d", "30d", "6m", "1y"].map((t) => (
+            {["7d","30d","6m","1y"].map((t) => (
               <Button
                 key={t}
                 variant={timeline === t ? "solid" : "outline"}
                 onClick={() => setTimeline(t)}
               >
-                {t === "7d"
-                  ? "7 Day"
-                  : t === "30d"
-                  ? "30 Day"
-                  : t === "6m"
-                  ? "6 Month"
-                  : "1 Year"}
+                {t==="7d"?"7 Day":t==="30d"?"30 Day":t==="6m"?"6 Month":"1 Year"}
               </Button>
             ))}
           </HStack>
 
           <Box bg="gray.100" p="8" borderRadius="md">
-            <StocksChart
-              data={chartData}
-              symbol={selectedStock}
-            />
+            <StocksChart data={chartData} symbol={selectedStock}/>
           </Box>
         </VStack>
       )}
